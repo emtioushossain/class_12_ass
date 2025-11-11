@@ -3,7 +3,14 @@ import 'calc_button.dart';
 import 'calculator_logic.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final bool isDarkTheme;
+  final VoidCallback onThemeToggle;
+
+  const HomeScreen({
+    super.key,
+    required this.isDarkTheme,
+    required this.onThemeToggle,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -40,7 +47,16 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      appBar: AppBar(
+        title: const Text('Calculator'),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Icon(widget.isDarkTheme ? Icons.light_mode : Icons.dark_mode),
+            onPressed: widget.onThemeToggle,
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
@@ -51,7 +67,10 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               child: Text(
                 input,
-                style: const TextStyle(color: Colors.white70, fontSize: 36),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
+                  fontSize: 36,
+                ),
               ),
             ),
             Container(
@@ -59,29 +78,24 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.only(right: 20, bottom: 20),
               child: Text(
                 result,
-                style: const TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onBackground,
+                  fontSize: 48,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             // Buttons Grid
             Expanded(
               child: Container(
                 padding: const EdgeInsets.all(10),
-                decoration: const BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(25),
-                    topRight: Radius.circular(25),
-                  ),
-                ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: buttonLabels.map((row) {
                     return Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: row.map((label) {
-                        if (label.isEmpty) {
-                          return const SizedBox(width: 70);
-                        }
+                        if (label.isEmpty) return const SizedBox(width: 70);
                         return CalcButton(
                           text: label,
                           onPressed: () => buttonPressed(label),
@@ -103,6 +117,6 @@ class _HomeScreenState extends State<HomeScreen> {
     if (label == 'AC') return Colors.redAccent;
     if (label == '=') return Colors.orangeAccent;
     if ('÷×−+'.contains(label)) return Colors.blueGrey;
-    return Colors.grey[850]!;
+    return widget.isDarkTheme ? Colors.grey[850]! : Colors.grey[300]!;
   }
 }

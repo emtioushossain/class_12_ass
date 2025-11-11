@@ -21,6 +21,7 @@ class CalcButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           shape: const CircleBorder(),
+          elevation: 2,
         ),
         onPressed: onPressed,
         child: Text(

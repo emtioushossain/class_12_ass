@@ -1,9 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:math_expressions/math_expressions.dart';
-
 class CalculatorLogic {
   static bool isValidInput(String input, String value) {
-    // Prevent multiple operators in a row
+    const ops = '+-*/÷×−';
     if (input.isEmpty && '÷×−+'.contains(value)) return false;
     if (input.isNotEmpty &&
         '÷×−+'.contains(value) &&
@@ -15,16 +12,88 @@ class CalculatorLogic {
 
   static String evaluate(String expression) {
     try {
-      String finalExp = expression
+      expression = expression
           .replaceAll('×', '*')
           .replaceAll('÷', '/')
           .replaceAll('−', '-');
-      Parser parser = Parser();
-      Expression exp = parser.parse(finalExp);
-      double eval = exp.evaluate(EvaluationType.REAL, ContextModel());
-      return eval.toStringAsFixed(eval.truncateToDouble() == eval ? 0 : 2);
-    } catch (e) {
+      final tokens = _tokenize(expression);
+      final rpn = _toRPN(tokens);
+      final result = _evalRPN(rpn);
+      if (result == result.truncateToDouble()) {
+        return result.toInt().toString();
+      }
+      return result.toStringAsFixed(2);
+    } catch (_) {
       return 'Error';
     }
+  }
+
+  static List<String> _tokenize(String expr) {
+    final tokens = <String>[];
+    final buffer = StringBuffer();
+    const ops = '+-*/()';
+    for (var ch in expr.split('')) {
+      if (ops.contains(ch)) {
+        if (buffer.isNotEmpty) {
+          tokens.add(buffer.toString());
+          buffer.clear();
+        }
+        tokens.add(ch);
+      } else {
+        buffer.write(ch);
+      }
+    }
+    if (buffer.isNotEmpty) tokens.add(buffer.toString());
+    return tokens;
+  }
+
+  static List<String> _toRPN(List<String> tokens) {
+    final output = <String>[];
+    final stack = <String>[];
+
+    int precedence(String op) => (op == '+' || op == '-') ? 1 : 2;
+    bool isOp(String t) => '+-*/'.contains(t);
+
+    for (var token in tokens) {
+      if (isOp(token)) {
+        while (stack.isNotEmpty &&
+            isOp(stack.last) &&
+            precedence(stack.last) >= precedence(token)) {
+          output.add(stack.removeLast());
+        }
+        stack.add(token);
+      } else {
+        output.add(token);
+      }
+    }
+    output.addAll(stack.reversed);
+    return output;
+  }
+
+  static double _evalRPN(List<String> rpn) {
+    final stack = <double>[];
+    for (var token in rpn) {
+      if ('+-*/'.contains(token)) {
+        final b = stack.removeLast();
+        final a = stack.removeLast();
+        switch (token) {
+          case '+':
+            stack.add(a + b);
+            break;
+          case '-':
+            stack.add(a - b);
+            break;
+          case '*':
+            stack.add(a * b);
+            break;
+          case '/':
+            stack.add(a / b);
+            break;
+        }
+      } else {
+        stack.add(double.parse(token));
+      }
+    }
+    return stack.single;
   }
 }
